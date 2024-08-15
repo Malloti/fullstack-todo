@@ -1,0 +1,35 @@
+@import 'bootstrap/scss/bootstrap';
+@import 'bootstrap-icons/font/bootstrap-icons';
+
+html {
+  height: 100%;
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+}
+
+main {
+  display: block;
+  overflow-x: auto;
+  height: 100%;
+}
+
+.header {
+  height: 75px;
+}
+
+.content {
+  margin-top: 100px;
+}
+
+.card-size {
+  width: 350px;
+}
+
+label.checked {
+  text-decoration: line-through;
+}
