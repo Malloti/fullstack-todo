@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useState} from "react";
-import TaskItem from "./TaskItem";
 import {destroy, get, post, put} from "@rails/request.js";
+
+import TaskItem from "./TaskItem";
 import FilterPopover from "./FilterPopover";
 
 export default function TaskList({ id, title, onChange, onDelete }) {
@@ -28,6 +29,14 @@ export default function TaskList({ id, title, onChange, onDelete }) {
   function handleClickEdit() {
     setIsEditing(true);
     setNewTitle(title);
+  }
+
+  function handleClickCancel() {
+    setIsEditing(false);
+    setNewTitle('');
+    if (id === 'new') {
+      handleDelete();
+    }
   }
 
   function handleClickNewTask() {
@@ -117,33 +126,42 @@ export default function TaskList({ id, title, onChange, onDelete }) {
                    type="text"
                    onInput={(e) => setNewTitle(e.currentTarget.value)}/>
           ) : (
-            <h3 className="w-75">{title}</h3>
+            <h3 className="list-header w-75" title={title}>{title}</h3>
           )}
         </div>
 
         <div className="d-inline-flex justify-content-end align-items-center gap-1 w-25">
           {isEditing ? (
-            <button type="button"
-                    title="Confirm"
-                    className="btn btn-outline-success btn-sm"
-                    onClick={handleChange}>
-              <i className="bi bi-check"></i>
-            </button>
-            ) : (
-            <button type="button"
-                    title="Edit List"
-                    className="btn btn-outline-warning btn-sm"
-                    onClick={handleClickEdit}>
-              <i className="bi bi-pen"></i>
-            </button>
+            <>
+              <button type="button"
+                      title="Confirm"
+                      className="btn btn-outline-success btn-sm"
+                      onClick={handleChange}>
+                <i className="bi bi-check"></i>
+              </button>
+              <button type="button"
+                      title="Delete List"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={handleClickCancel}>
+                <i className="bi bi-x"></i>
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button"
+                      title="Edit List"
+                      className="btn btn-outline-warning btn-sm"
+                      onClick={handleClickEdit}>
+                <i className="bi bi-pen"></i>
+              </button>
+              <button type="button"
+                      title="Delete List"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={handleDelete}>
+                <i className="bi bi-trash"></i>
+              </button>
+            </>
           )}
-
-          <button type="button"
-                  title="Delete List"
-                  className="btn btn-outline-danger btn-sm"
-                  onClick={handleDelete}>
-            <i className="bi bi-trash"></i>
-          </button>
         </div>
       </div>
       <div className="card-body w-100 p-0">

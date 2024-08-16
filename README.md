@@ -27,7 +27,7 @@ git clone https://github.com/Malloti/fullstack-todo.git
 ```sh
 bin/setup
 ```
-3. Run the migrations
+3. Run the application
 ```sh
-bin/rails db:migrate
+bin/dev
 ```
