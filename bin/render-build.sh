@@ -2,4 +2,10 @@
 # exit on error
 set -o errexit
 
-bin/setup
+bundle check || bundle install
+bundle exec rails assets:precompile
+bundle exec rails assets:clean
+
+bundle exec rails db:prepare
+
+yarn check --check-files || yarn install
