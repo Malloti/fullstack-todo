@@ -65,8 +65,7 @@ export default function TaskList({ id, title, onChange, onDelete }) {
 
     if (!response.ok) {
       const messages = await response.json;
-      alert(messages[0]);
-      return;
+      alert(messages[0] ?? 'Error saving task!');
     }
 
     fetchItems().then();
@@ -82,7 +81,7 @@ export default function TaskList({ id, title, onChange, onDelete }) {
     const response = await destroy(`lists/${id}/tasks/${itemId}`);
     if (!response.ok) {
       const messages = await response.json;
-      alert(messages[0]);
+      alert(messages[0] ?? 'Error deleting task!');
       return;
     }
 
@@ -102,7 +101,7 @@ export default function TaskList({ id, title, onChange, onDelete }) {
     const response = await get(`lists/${id}/tasks`, { query });
     if (!response.ok) {
       const messages = await response.json;
-      alert(messages[0]);
+      alert(messages[0] ?? 'Error fetching tasks!');
       return;
     }
 
@@ -110,10 +109,12 @@ export default function TaskList({ id, title, onChange, onDelete }) {
   }
 
   useEffect(() => {
-    fetchItems().then();
     if (id === 'new') {
       setIsEditing(true);
+      return;
     }
+
+    fetchItems().then();
   }, [id, selectedFilter]);
 
   return (

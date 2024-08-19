@@ -26,9 +26,10 @@ export default function App() {
   }
 
   async function handleTaskChange(id, newListTitle) {
+    setIsCreating(false);
     let response;
     if (id === 'new') {
-      setLists(lists.filter(list => list.id === id));
+      setLists(lists.filter(list => list.id !== id));
       response = await post('lists', {body: { title: newListTitle}});
     } else {
       response = await put(`lists/${id}`, {body: { title: newListTitle}})
@@ -36,8 +37,7 @@ export default function App() {
 
     if (!response.ok) {
       const messages = await response.json;
-      alert(messages[0]);
-      return;
+      alert(messages[0] ?? 'Error saving list!');
     }
 
     fetchTasksList().then();
@@ -53,7 +53,7 @@ export default function App() {
     const response = await destroy(`lists/${id}`);
     if (!response.ok) {
       const messages = await response.json;
-      alert(messages[0]);
+      alert(messages[0] ?? 'Error deleting list!');
       return;
     }
 
