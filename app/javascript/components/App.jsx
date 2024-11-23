@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from "react";
 import {destroy, get, post, put} from "@rails/request.js";
 
+import listsChannel from "../channels/lists";
 import TaskList from "./TaskList";
 
 export default function App() {
   const [lists, setLists] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  listsChannel.subscriptions.create("ListsChannel", {
+    received(data) {
+      setLists(data);
+    }
+  });
 
   async function fetchTasksList() {
     const response = await get('lists');
@@ -26,10 +34,10 @@ export default function App() {
   }
 
   async function handleTaskChange(id, newListTitle) {
-    setIsCreating(false);
+    setErrorMsg('');
+
     let response;
     if (id === 'new') {
-      setLists(lists.filter(list => list.id !== id));
       response = await post('lists', {body: { title: newListTitle}});
     } else {
       response = await put(`lists/${id}`, {body: { title: newListTitle}})
@@ -37,10 +45,11 @@ export default function App() {
 
     if (!response.ok) {
       const messages = await response.json;
-      alert(messages[0] ?? 'Error saving list!');
+      setErrorMsg(messages[0] ?? 'Error saving list!');
+      return;
     }
 
-    fetchTasksList().then();
+    setIsCreating(false);
   }
 
   async function handleTaskDelete(id) {
@@ -72,7 +81,7 @@ export default function App() {
       <div className="content d-inline-flex mx-2 mh-100 gap-2">
         {lists.map(list => (
           <div key={list.id}>
-            <TaskList id={list.id} title={list.title} onChange={handleTaskChange} onDelete={handleTaskDelete}/>
+            <TaskList id={list.id} title={list.title} onChange={handleTaskChange} onDelete={handleTaskDelete} errorMsg={errorMsg}/>
           </div>
         ))}
         {!isCreating && (

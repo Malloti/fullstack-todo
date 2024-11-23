@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useState} from "react";
+import Input from "./Input";
 
-export default function TaskItem({ id, title, done, onChange, onDelete }) {
+export default function TaskItem({ id, title, done, onChange, onDelete, errorMsg }) {
   const [newTitle, setNewTitle] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
@@ -13,7 +14,6 @@ export default function TaskItem({ id, title, done, onChange, onDelete }) {
       newValue.title = newTitle;
     }
 
-    setIsEditing(false);
     onChange(id, newValue);
   }, [id, title, newTitle, setIsEditing, done, onChange]);
 
@@ -44,14 +44,17 @@ export default function TaskItem({ id, title, done, onChange, onDelete }) {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (isEditing && !errorMsg) {
+      setIsEditing(false);
+    }
+  }, [errorMsg]);
+
   return (
-    <li className="list-group-item d-inline-flex">
+    <li className="list-group-item d-inline-flex align-items-start">
       <div className="d-flex align-items-center w-75">
         {isEditing ? (
-          <input className="form-control"
-                 value={newTitle}
-                 placeholder="Title"
-                 onInput={e => setNewTitle(e.currentTarget.value)}/>
+          <Input value={newTitle} placeholder="Title" onInput={e => setNewTitle(e.currentTarget.value)} errorMsg={errorMsg} />
         ) : (
           <div className="form-check">
             <input className="form-check-input"

@@ -16,6 +16,8 @@ class ListsController < ApplicationController
       return
     end
 
+    ListsChannel.broadcast_to('lists', List.all)
+
     render json: list, status: :created
   end
 
@@ -26,6 +28,8 @@ class ListsController < ApplicationController
       return
     end
 
+    ListsChannel.broadcast_to('lists', List.all)
+
     render json: @list, status: :ok
   end
 
@@ -35,6 +39,7 @@ class ListsController < ApplicationController
       render json: @list.errors.full_messages, status: :unprocessable_entity
     end
 
+    ListsChannel.broadcast_to('lists', List.all)
     render json: {}, status: :ok
   end
 

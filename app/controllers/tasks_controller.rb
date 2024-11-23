@@ -7,6 +7,7 @@ class TasksController < ApplicationController
     tasks = Task.where(list_id: @list.id)
     tasks = tasks.where(done: true) if params.has_key?(:done) && params[:done] == "true"
     tasks = tasks.where(done: false) if params.has_key?(:done) && params[:done] == "false"
+    tasks = tasks.order(params[:sort]) if params.has_key?(:sort)
 
     render json: tasks
   end
@@ -19,6 +20,8 @@ class TasksController < ApplicationController
       return
     end
 
+    TasksChannel.broadcast_to('tasks', Task.all)
+
     render json: task, status: :created
   end
 
@@ -29,6 +32,8 @@ class TasksController < ApplicationController
       return
     end
 
+    TasksChannel.broadcast_to('tasks', Task.all)
+
     render json: @task, status: :ok
   end
 
@@ -37,6 +42,8 @@ class TasksController < ApplicationController
     unless @task.destroy
       render json: @task.errors.full_messages, status: :unprocessable_entity
     end
+
+    TasksChannel.broadcast_to('tasks', Task.all)
 
     render json: {}, status: :ok
   end

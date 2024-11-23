@@ -2,29 +2,43 @@ import React, {useCallback, useEffect, useState} from "react";
 import {destroy, get, post, put} from "@rails/request.js";
 
 import TaskItem from "./TaskItem";
-import FilterPopover from "./FilterPopover";
+import OptionsPopover from "./OptionsPopover";
+import Input from "./Input";
+import TasksChannel from "../channels/tasks";
 
-export default function TaskList({ id, title, onChange, onDelete }) {
+export default function TaskList({ id, title, onChange, onDelete, errorMsg }) {
   const NEW_ITEM_ID = 'new';
 
   const [items, setItems] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [newTitle, setNewTitle] = useState('');
+  const [itemErrorMsg, setItemErrorMsg] = useState('');
 
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [selectedSort, setSelectedSort] = useState('id');
 
   const filters = [
     { value: 'pending', title: 'Pending' },
     { value: 'complete', title: 'Complete'},
     { value: 'all', title: 'All'}
   ];
+  const sorts = [
+    { value: 'id', title: 'ID' },
+    { value: 'title', title: 'Title' },
+    { value: 'created_at', title: 'Created At' }
+  ];
 
   const handleChange = useCallback(() => {
-    setIsEditing(false);
-    onChange(id, newTitle)
+    onChange(id, newTitle);
   }, [id, newTitle, setIsEditing, onChange]);
   const handleDelete = useCallback(() => onDelete(id), [id, onDelete]);
+
+  TasksChannel.subscriptions.create("TasksChannel", {
+    received(data) {
+      setItems(data);
+    }
+  });
 
   function handleClickEdit() {
     setIsEditing(true);
@@ -48,7 +62,8 @@ export default function TaskList({ id, title, onChange, onDelete }) {
   }
 
   async function handleItemChange(itemId, newValue) {
-    setIsAddingItem(false);
+    setItemErrorMsg('');
+
     const newItems = items.filter(item => item.id !== itemId);
     if (itemId === NEW_ITEM_ID && newValue.title === '') {
       setItems(newItems);
@@ -65,10 +80,11 @@ export default function TaskList({ id, title, onChange, onDelete }) {
 
     if (!response.ok) {
       const messages = await response.json;
-      alert(messages[0] ?? 'Error saving task!');
+      setItemErrorMsg(messages[0] ?? 'Error saving task!');
+      return;
     }
 
-    fetchItems().then();
+    setIsAddingItem(false);
   }
 
   async function handleItemDelete(itemId) {
@@ -82,20 +98,24 @@ export default function TaskList({ id, title, onChange, onDelete }) {
     if (!response.ok) {
       const messages = await response.json;
       alert(messages[0] ?? 'Error deleting task!');
-      return;
     }
-
-    setItems(items.filter(item => item.id !== itemId));
   }
 
-  async function handleFilterChange(newValue) {
+  function handleFilterChange(newValue) {
     setSelectedFilter(newValue);
+  }
+
+  function handleSortChange(newValue) {
+    setSelectedSort(newValue);
   }
 
   async function fetchItems() {
     const query = {};
     if (selectedFilter !== 'all') {
         query.done = selectedFilter === 'complete';
+    }
+    if (selectedSort !== 'id') {
+      query.sort = selectedSort;
     }
 
     const response = await get(`lists/${id}/tasks`, { query });
@@ -115,17 +135,20 @@ export default function TaskList({ id, title, onChange, onDelete }) {
     }
 
     fetchItems().then();
-  }, [id, selectedFilter]);
+  }, [id, selectedFilter, selectedSort]);
+
+  useEffect(() => {
+    if (isEditing && !errorMsg) {
+      setIsEditing(false);
+    }
+  }, [errorMsg]);
 
   return (
     <div className="card card-size">
-      <div className="card-header justify-content-between d-flex">
+      <div className="card-header justify-content-between align-items-start d-flex">
         <div className="w-75">
           {isEditing ? (
-            <input className="form-control"
-                   value={newTitle}
-                   type="text"
-                   onInput={(e) => setNewTitle(e.currentTarget.value)}/>
+            <Input value={newTitle} placeholder="Title" onInput={e => setNewTitle(e.currentTarget.value)} errorMsg={errorMsg} />
           ) : (
             <h3 className="list-header w-75" title={title}>{title}</h3>
           )}
@@ -173,7 +196,8 @@ export default function TaskList({ id, title, onChange, onDelete }) {
                       title={item.title}
                       done={item.done}
                       onChange={handleItemChange}
-                      onDelete={handleItemDelete}/>
+                      onDelete={handleItemDelete}
+                      errorMsg={itemErrorMsg}/>
           ))}
 
           <div className="d-flex w-100 justify-content-center align-items-center gap-1">
@@ -186,7 +210,7 @@ export default function TaskList({ id, title, onChange, onDelete }) {
                   <i className="bi bi-plus-lg"></i>
                   Add Task
                 </button>
-                <FilterPopover selectedOption={selectedFilter} options={filters} onChange={handleFilterChange} />
+                <OptionsPopover selectedFilter={selectedFilter} filters={filters} selectedSort={selectedSort} sorts={sorts} onChangeFilter={handleFilterChange} onChangeSort={handleSortChange} />
               </>
             )}
           </div>
